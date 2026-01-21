@@ -102,7 +102,7 @@ def multiplier(a, b, c):
 print (multiplier(2, 3, 5))
 ```
 
-*That's wrong, we were expecting 6 + 10 + 15 = 21*
+*That's wrong, we were expecting 6 + 10 + 15 = 31*
 
 ---
 
