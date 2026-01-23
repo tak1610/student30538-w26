@@ -1,0 +1,55 @@
+---
+title: "Kickoff - lecture 6"
+author: "Peter Ganong and Maggie Shi"
+date-format: January 22, 2026
+format: 
+    revealjs:
+        slide-number: true
+        show-slide-number: all
+        self-contained: true
+---
+
+## Reminders
+
+* Reminders
+    * PS2 due Saturday (deferred from last week)
+    * Final [project proposal](https://canvas.uchicago.edu/courses/68386/quizzes/157996/take?preview=1) due Saturday 
+        * Looking for a partner? Use [this sheet](https://docs.google.com/spreadsheets/d/1KgtrudJurDOu6NxhozHdaU6WveEBmMybom-a7XrFGFo/edit?usp=sharing)
+        * If group with your section, only need to be free at your section's times. However, if group with someone from another section, also need to be free at their section times.
+    * Class only 60 minutes today
+
+* Assessments
+    * Enrollment has closed, so seating charts have been finalized
+    * You must take the assessment during your scheduled lab 
+    * Recall we drop your lowest lab assessment
+
+## PS1 grading {style="font-size: 0.6em"}
+* Grading only for completion (50\%, 90\%, 100\%) 
+    > In order for your submission to be considered complete, you need to push both your .qmd and the compiled PDF to your repository. Submissions that do not include both files will automatically receive 50% credit.”
+* Among those with submitted PDFs, AI TA thinks that people got most of the answers right
+
+![](pictures/ps1_distn.png)
+
+## Week 3 quiz common mistakes I {style="font-size: 0.9em"}
+* First pass at grading done, but not ready to release. So far, grades look better than week 2's quiz.
+
+1. Say you were interested in the average income in each ZIP code. Make a plot showing this in Altair. Specify the data type(s) being plotted (N/O/Q/T). 
+
+    > `alt.X("zip_code:N"), alt.Y("mean(income_usd):Q"` ratio
+
+    > Common mistakes: not showing the chart (chart should be last line or include `display(chart)`)
+
+
+## Week 3 quiz common mistakes II {style="font-size: 0.9em"}
+
+2. Assume the Federal Poverty Line (FPL) is $15650. Say you were interested in how far each age bracket is on average from the FPL. Make a plot in Altair. Specify the data type(s) being plotted(N/O/Q/T). 
+
+    > `df["diff_to_FPL"] = df["income_usd"] - poverty_line; alt.X("age:O") alt.Y("mean(diff_to_FPL):Q"` interval
+
+    > Common mistakes: not calculating distance to FPL, age as `N`
+
+## Midcourse survey
+
+Will chat about [draft](
+https://docs.google.com/document/d/11qNqrkgE91G7BzjGfogKcLlzwmaMW3lB_FERyAoXtng/edit?tab=t.0) if we  have time
+

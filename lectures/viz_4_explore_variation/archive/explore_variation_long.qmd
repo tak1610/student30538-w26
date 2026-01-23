@@ -1,0 +1,837 @@
+---
+title: "Visualization (Exploring variation)"
+author: "Peter Ganong and Maggie Shi"
+date: today
+date-format: long
+format: 
+  revealjs:
+    slide-number: true
+    show-slide-number: all
+---
+
+
+```{python}
+import altair as alt
+from vega_datasets import data
+from palmerpenguins import load_penguins
+import plotnine
+#from plotnine import *
+from plotnine.data import diamonds, mpg
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+alt.data_transformers.enable('default', max_rows=None)
+```
+
+
+
+# Introduction
+## Roadmap of lecture 
+* Introduce data analysis for exploration vs. production
+* Categorical variables
+* Continuous variables
+    * Exploring typical values
+    * Exploring and dealing with unusual values
+
+## What is exploratory data analysis?
+
+Data visualization has two distinct goals
+
+1. **exploration** for you to *learn* as much as possible
+2. **production** for you to *teach* someone else what you think the key lessons are
+
+## Exploration vs. production
+
+* When you are in exploration mode, you will look at lots of patterns and your brain filters out the noise
+* Production mode is like putting a cone on your dog. You are deliberately limiting the reader's field of vision such that they see the key messages from the plot *and avoid too many distractions*
+
+## Exploration vs. production
+* Much of what we've covered up until now is focused on **production**
+    * Choosing marks, encodings, and transformations with the audience/message in mind
+* The next two lectures are almost entirely about **exploration**
+    * Using data visualization as an *tool* to understand data
+    * Recall Anscombe's quartet: visualization is one of many tools to summarize data
+* Caveat: these modes make the most sense when thinking about *static* visualization. 
+
+<!-- MS to GGG: right now Anscombe's quartet is introduced in the marks+encoding lecture. Would it make more sense here? -->
+
+
+## Introduction to data
+
+Most of our visualization lectures are based on the [University of Washington](https://idl.uw.edu/visualization-curriculum/) textbook, but the textbook doesn't have enough material on exploratory data analysis. We therefore are supplementing with the [Data Visualization](https://r4ds.hadley.nz/data-visualize) and [Exploratory Data Analysis](https://r4ds.hadley.nz/eda) material in the **R for Data Science** textbook (with the code translated to Altair).
+
+* `diamonds` is from "Exploratory Data Analysis"
+* `movies` (also used last lecture) is from the UW textbook 
+* `penguins` is from "Data Visualization" 
+
+
+
+# Categorical variables
+
+## Categorical variables: roadmap 
+
+* introduce `diamonds`
+* show table
+* show bar graph
+
+## introduce dataset `diamonds`
+```{.python}
+import pandas as pd
+from plotnine.data import diamonds
+diamonds.head()
+```
+
+<div style="font-size: 70%">
+```{python}
+diamonds.head()
+```
+
+</div>
+
+## introduce dataset `diamonds`
+```{.python}
+diamonds.shape
+```
+
+```{python}
+diamonds.shape
+```
+
+
+
+## `diamonds` data dictionary
+<div style="font-size: 60%">
+
+(Accessed by running `?diamonds` in R)
+
+Variable | Definition | Values |
+| --- | --- | --- | 
+`price`| price in USD | $326–$18,823 |
+`carat`| weight of diamond | 0.2-5.01 |
+`cut` | quality of the cut | Fair, Good, Very Good, Premium, Ideal |
+`color` | diamond color | D (best) to J (worst) |
+`clarity` | measure of how clear diamond is | I1 (worst), SI2, SI1, VS2, VS1, VVS2, VVS1, IF (best) |
+`x` | length in mm | 0-10.74 |
+`y` | width in mm | 0-58.9 |
+`z` | depth in mm | 0-31.8 |
+`depth` | $\frac{z}{ mean(x, y)}$ | 43-79 |
+`table` | width of top of diamond relative to widest point  | 43-95 |
+
+
+</div>
+
+##  Summarizing `cut` in a table
+```{.python}
+diamonds_cut = diamonds.groupby('cut').size()
+diamonds_cut
+```
+
+```{python}
+#| warning: false
+diamonds_cut = diamonds.groupby('cut').size()
+diamonds_cut
+```
+
+## Summarizing with a bar graph
+```{.python code-line-numbers="1|"} 
+diamonds_cut = diamonds_cut.reset_index().rename(columns={0:'N'}) 
+
+alt.Chart(diamonds_cut).mark_bar().encode(
+    alt.X('cut'),
+    alt.Y('N')
+)
+```
+
+```{python}
+diamonds_cut = diamonds_cut.reset_index().rename(columns={0:'N'})
+
+
+alt.Chart(diamonds_cut).mark_bar().encode(
+    alt.Y('cut'),
+    alt.X('N')
+)
+```
+
+First line prepares frequency table `diamonds_cut` for plotting
+
+## Categorical variables: summary
+
+* This section is very brief because there's basically only one good way to plot categorical variables with a small number of categories and this is it. 
+    * You can use `mark_point()` instead of `mark_bar()`, but overall, there's a clear right answer about how to do this. 
+* We include this material mainly to foreshadow the fact that we will do a lot on categorical variables in the next lecture when we get to "Exploring Co-variation"
+
+
+# Continuous Variables
+
+## Continuous variables: roadmap
+
+* Binning + histograms using `movies`
+* Histograms and density plots using `penguins`
+* Exploring carat size using `diamonds`
+
+Remark: The skills are absolutely fundamental and so we will intentionally be a bit repetitive.
+
+
+## Recall: `movies` dataset
+
+<div style="font-size: 70%">
+```{.python}
+movies_url = 'https://cdn.jsdelivr.net/npm/vega-datasets@1/data/movies.json'
+movies = pd.read_json(movies_url)
+movies.head()
+```
+
+
+
+```{python}
+movies_url = 'https://cdn.jsdelivr.net/npm/vega-datasets@1/data/movies.json'
+movies = pd.read_json(movies_url)
+movies.head()
+```
+</div>
+
+<!-- 
+MS to GGG: removing these slides because they're basically just a scatter plot version of a histogram? 
+
+## scatter plot -- N movies per bin
+**Rotten Tomatoes** ratings are determined by taking "thumbs up" and "thumbs down" judgments from film critics and calculating the percentage of positive reviews.
+```{python}
+alt.Chart(movies_url).mark_circle().encode(
+    alt.X('Rotten_Tomatoes_Rating:Q', bin=alt.BinParams(maxbins=20)),
+    alt.Y('count(IMDB_Rating):Q')
+)
+```
+
+## scatter plot -- syntax trick
+Replace `count(IMDB_Rating)` with `count()` because we aren't using IMDB rating any more.
+```{python}
+alt.Chart(movies_url).mark_circle().encode(
+    alt.X('Rotten_Tomatoes_Rating:Q', bin=alt.BinParams(maxbins=20)),
+    alt.Y('count():Q')
+)
+``` 
+-->
+
+## Histogram of Rotten Tomatoes using `mark_bar()`
+* **Rotten Tomatoes** ratings are determined by taking "thumbs up" and "thumbs down" judgments from film critics and calculating the percentage of positive reviews.
+* This is a continuous measure, but we can bin it to create a **histogram** of frequencies
+
+## Histogram of Rotten Tomatoes using `mark_bar()`
+```{.python code-line-numbers="2|2-3|"}
+hist_rt = alt.Chart(movies_url).mark_bar().encode(
+    alt.X('Rotten_Tomatoes_Rating:Q', bin=alt.BinParams(maxbins=20)),
+    alt.Y('count():Q')
+)
+hist_rt
+```
+
+```{python}
+hist_rt = alt.Chart(movies_url).mark_bar().encode(
+    alt.X('Rotten_Tomatoes_Rating:Q', bin=alt.BinParams(maxbins=20)),
+    alt.Y('count():Q')
+)
+hist_rt
+```
+
+Discussion question: how would you describe the distribution of Rotten Tomatoes ratings?
+
+::: {.notes .content-visible when-profile="speaker"}
+**NOTES:**
+*solution: 
+main answer: close to uniform.
+two additional details are also notable
+1) the bottom bin out of 20 has very few movies 
+2) there's a gentle shift/trend upward so higher-rated movies are a bit more common than lower-rated movies*
+:::
+
+
+## Histogram of IMDB ratings
+**IMDB ratings** are formed by averaging scores (ranging from 1 to 10) provided by the site's users.
+```{.python}
+hist_imdb = alt.Chart(movies_url).mark_bar().encode(
+    alt.X('IMDB_Rating:Q', bin=alt.BinParams(maxbins=20)),
+    alt.Y('count():Q')
+)
+hist_imdb
+```
+
+```{python}
+hist_imdb = alt.Chart(movies_url).mark_bar().encode(
+    alt.X('IMDB_Rating:Q', bin=alt.BinParams(maxbins=20)),
+    alt.Y('count():Q')
+)
+hist_imdb
+```
+
+## Side-by-side
+```{.python}
+hist_rt | hist_imdb
+```
+
+```{python}
+hist_rt | hist_imdb
+```
+
+Discussion question: compare the two ratings distributions. If _your goal is to differentiate between good and bad movies_, which is more informative?
+
+::: {.notes .content-visible when-profile="speaker"}
+**NOTES:**
+*solution: Rotten tomatoes. IMDB is too compressed.*
+:::
+
+
+
+
+## Introducing the `penguins` dataset
+
+```{.python}
+from palmerpenguins import load_penguins
+penguins = load_penguins()
+penguins.head()
+```
+
+<div style="font-size: 70%">
+```{python}
+from palmerpenguins import load_penguins
+penguins = load_penguins()
+penguins.head()
+```
+</div>
+
+## Histogram with steps of 200
+* We previously picked the maximum number of equally-spaced bins (`BinParams(maxbins=20)`) and let `altair` choose "nice"-looking bin widths for the histogram
+* Alternatively, we can manually control the bin width using `step`
+
+## Histogram with steps of 200
+```{.python code-line-numbers="2|"}
+alt.Chart(penguins).mark_bar().encode(
+    alt.X('body_mass_g:Q', bin=alt.BinParams(step=200)),
+    alt.Y('count():Q')
+)
+```
+
+```{python}
+alt.Chart(penguins).mark_bar().encode(
+    alt.X('body_mass_g:Q', bin=alt.BinParams(step=200)),
+    alt.Y('count():Q')
+)
+```
+
+## Histogram `step` parameter
+
+`step=20` vs. `step=200` vs. `step=2000`
+
+```{python}
+#| echo: false
+
+plot1 = alt.Chart(penguins).mark_bar().encode(
+    alt.X('body_mass_g', bin=alt.BinParams(step=20)),
+    alt.Y('count()'))
+
+plot2 = alt.Chart(penguins).mark_bar().encode(
+    alt.X('body_mass_g', bin=alt.BinParams(step=200)),
+    alt.Y('count()'))
+
+plot3 = alt.Chart(penguins).mark_bar().encode(
+    alt.X('body_mass_g', bin=alt.BinParams(step=2000)),
+    alt.Y('count()'))
+
+plot1 | plot2 | plot3
+```
+
+
+Discussion question: what message comes from each `binwidth` choice? Which do you prefer?
+
+::: {.notes .content-visible when-profile="speaker"}
+**NOTES:**
+*solution 
+the middle plot is by far the easiest to interpret. The top plot shows the bins in such a thin way that it is hard to see much of anything. 
+
+FYI, this deliberately intended to be a setup for the diamonds density plot coming up in the next subsection because there adding narrower bins is actually quite revealing*
+:::
+
+## Density plot
+An alternative to a histogram for exploring frequency in continuous variable: density plot using `transform_density`
+
+```{.python code-line-numbers="1-3|"}
+alt.Chart(penguins).transform_density(
+    'body_mass_g',
+    as_=['body_mass_g', 'density']
+).mark_area().encode(
+    x='body_mass_g:Q',
+    y='density:Q'
+)
+```
+
+```{python}
+alt.Chart(penguins).transform_density(
+    'body_mass_g',
+    as_=['body_mass_g', 'density']
+).mark_area().encode(
+    x='body_mass_g:Q',
+    y='density:Q'
+)
+```
+::: {.notes .content-visible when-profile="speaker"}
+**NOTES:**
+Explaining the syntax:
+transform_density('body_mass_g', ...) tells altair to compute a kernel density estimate
+as_=['body_mass_g', 'density'] names the output of the density transform -- first item (body_mass_g) is name of x-values and second is the name for the y-values (density)
+:::
+    
+## test 
+```{python}
+alt.Chart(diamonds).mark_point().encode(
+    alt.X('carat:Q'),
+    alt.Y('price:Q')
+)
+```
+
+
+## Back to diamonds, focus on `carat`
+```{python}
+
+alt.Chart(diamonds).mark_bar().encode(
+    alt.X('carat', bin=alt.Bin(maxbins=10)),
+    alt.Y('count()')
+)
+``` 
+
+## Back to diamonds, focus on `carat`
+```{.python code-line-numbers="1|"}
+alt.data_transformers.disable_max_rows() 
+
+alt.Chart(diamonds).mark_bar().encode(
+    alt.X('carat', bin=alt.Bin(maxbins=10)),
+    alt.Y('count()')
+)
+``` 
+
+```{python}
+# Define bin edges
+bin_edges = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5]
+
+# Bin 'carat' and extract left/right bin edges
+diamonds['carat_bin'] = pd.cut(diamonds['carat'], bins=bin_edges, right=False)
+diamonds['carat_bin_left'] = diamonds['carat_bin'].apply(lambda x: x.left)
+diamonds['carat_bin_right'] = diamonds['carat_bin'].apply(lambda x: x.right)
+
+# Count rows per bin
+binned = diamonds.groupby(['carat_bin_left', 'carat_bin_right']).size().reset_index(name='count')
+
+# Plot using rects with white stroke
+chart = alt.Chart(binned).mark_rect(stroke='white', strokeWidth=1).encode(
+    x=alt.X('carat_bin_left:Q', title='carat (binned)', axis=alt.Axis(format=".1f")),
+    x2='carat_bin_right:Q',
+    y=alt.Y('count:Q', title='Count of Records')
+)
+
+chart
+```
+
+First line disables `altair`'s maximum row limit (5,000)
+
+<div style="font-size: 50%">
+_Side note: disabling this actually does not work when compiling RevealJS (but it does work for PDFs and interactive), so the source code for this lecture uses `pandas` to bin before plotting_
+</div>
+
+
+::: {.notes .content-visible when-profile="speaker"}
+**NOTES:**
+(explanation from ChatGPT of the manual pandas override on this (and following) slide)
+The first code chunk shows what you'd typically write in Jupyter or if you were compiling to PDF to make a histogram with Altair — just bin the `carat` variable using Altair's built-in `bin=alt.Bin(...)` and disable the row limit with `alt.data_transformers.disable_max_rows()`.
+
+However, **this doesn't work when compiling to Revealjs**, because **Revealjs ignores that call** to `disable_max_rows()`. The chart is rendered at compile time, not interactively, so the row limit is still enforced behind the scenes, and the plot fails to render.
+
+To work around that, we do the **binning manually in pandas**, and pass Altair a pre-aggregated summary table. This keeps the dataset under the 5000-row limit that Altair enforces for static rendering, making it fully Revealjs-compatible.
+
+So the first code chunk is shown to illustrate what you might *want* to do in a notebook, but the second chunk is what's needed to make an exact replica that works with RevealjS.
+:::
+    
+
+
+<!-- ## Continuous Variables
+```{python}
+#| warning: false
+diamonds['bins'] = pd.cut(diamonds['carat'], bins=10)
+diamonds.groupby('bins').size()
+``` 
+-->
+
+
+## Histogram of `carat`
+
+```{.python code-line-numbers="1|"}
+diamonds_small = diamonds.loc[diamonds['carat'] < 2.1]
+
+alt.Chart(diamonds_small).mark_bar().encode(
+    alt.X('carat', bin=alt.BinParams(step=0.2)),
+    alt.Y('count()')
+)
+```
+
+```{python}
+# Step 1: Filter diamonds < 2.2 carats
+diamonds_small = diamonds[diamonds['carat'] < 2.2].copy()
+
+# Step 2: Use 0.2-width bins from 0.0 to 2.2
+bin_edges = pd.interval_range(start=0.0, end=2.2, freq=0.2, closed='left')
+
+# Step 3: Bin using pd.cut with include_lowest=True
+diamonds_small['carat_bin'] = pd.cut(
+    diamonds_small['carat'],
+    bins=bin_edges,
+    include_lowest=True
+)
+
+# Step 4: Count per bin
+binned = diamonds_small['carat_bin'].value_counts(sort=False).reset_index()
+binned.columns = ['carat_bin', 'count']
+binned['carat_bin_left'] = binned['carat_bin'].apply(lambda x: x.left)
+binned['carat_bin_right'] = binned['carat_bin'].apply(lambda x: x.right)
+
+binned = binned.drop(columns=['carat_bin'])
+
+# Step 5: Plot with tick values set manually to bin starts
+chart = alt.Chart(binned).mark_rect(stroke='white', strokeWidth=0.5).encode(
+   x=alt.X(
+    'carat_bin_left:Q',
+    title='carat (binned)',
+    scale=alt.Scale(domain=[0, 2.2]), 
+    axis=alt.Axis(format=".2f", values=binned['carat_bin_left'].tolist(), grid = False)
+    ),
+    x2='carat_bin_right:Q',
+    y=alt.Y('count:Q', title='Count of Records')
+)
+
+chart
+```
+
+
+
+## Another histogram of `carat`
+
+```{.python}
+alt.Chart(diamonds_small).mark_bar().encode(
+    alt.X('carat', bin=alt.BinParams(step=0.02)),
+    alt.Y('count()')
+)
+```
+```{python}
+# Step 1: Filter diamonds < 2.2 carats
+diamonds_small = diamonds[diamonds['carat'] < 2.2].copy()
+
+# Step 2: Use 0.2-width bins from 0.0 to 2.2
+bin_edges = pd.interval_range(start=0.0, end=2.2, freq=0.02, closed='left')
+
+# Step 3: Bin using pd.cut with include_lowest=True
+diamonds_small['carat_bin'] = pd.cut(
+    diamonds_small['carat'],
+    bins=bin_edges,
+    include_lowest=True
+)
+
+# Step 4: Count per bin
+binned = diamonds_small['carat_bin'].value_counts(sort=False).reset_index()
+binned.columns = ['carat_bin', 'count']
+binned['carat_bin_left'] = binned['carat_bin'].apply(lambda x: x.left)
+binned['carat_bin_right'] = binned['carat_bin'].apply(lambda x: x.right)
+
+binned = binned.drop(columns=['carat_bin'])
+
+# Step 5: Plot with tick values set manually to bin starts
+chart = alt.Chart(binned).mark_rect(stroke='white', strokeWidth=0.5).encode(
+   x=alt.X(
+    'carat_bin_left:Q',
+    title='carat (binned)',
+    scale=alt.Scale(domain=[0, 2.2]), 
+    axis=alt.Axis(format=".2f", values=binned['carat_bin_left'].tolist(), grid = False)
+    ),
+    x2='carat_bin_right:Q',
+    y=alt.Y('count:Q', title='Count of Records')
+)
+
+chart
+```
+
+
+
+Discussion questions 
+
+1. What lessons does this plot teach?
+2. What questions does it raise?
+
+::: {.notes .content-visible when-profile="speaker"}
+**NOTES:**
+*
+1. there's a ton of missing mass.
+2. Are diamonds being cut down to exact sizes? Are diamond weights being fraudulently inflated? Why are some diamonds cut and not others?*
+
+*ask class how many have been to the Art Institute and see this painting*
+:::
+
+## Aside: "A Sunday on La Grande Jatte" by Seurat
+
+![](pictures/seurat.jpg)
+
+::: {.notes .content-visible when-profile="speaker"}
+**NOTES:**
+*for those of you who have not seen the painting (and perhaps some of you who have seen it), you noticed that it's actually made up of millions of little dots. This is a style known as pointillism. Sort of like pixels before we had computer screens. It's a good example of how you can notice more detail and more interesting detail by looking closely at a painting or a plot.
+
+In addition, there's something else (flip back) that you notice by looking closely which is that none of the people in the painting are looking at each other. They are all in their own worlds, isolated from and not interacting with one another. Obviously this is not an art course, our main point is just that there's huge value to looking closely at the plots that you make*
+:::
+
+
+## Aside: "A Sunday on La Grande Jatte" by Seurat
+![](pictures/seurat_zoomed.jpg)
+
+
+## Typical continuous variables: summary 
+* Main tool to explore uni-dimensional continuous variables: histograms
+* Varying the bin widths can reveal different patterns
+
+# Continuous variables: unusual values
+<!-- source: Lecture 5, slides 26-44 -->
+ 
+## Unusual continuous variables: roadmap
+
+* case study: `y` dimension in diamonds
+    * explore some unusual  values
+    * three options for handling unusual values
+
+## `diamonds`: identify unusual `y` values
+First pass to examine for unusual values: summary statistics 
+```{.python}
+diamonds['y'].describe()
+```
+
+```{python}
+diamonds['y'].describe()
+```
+
+## `diamonds`: examine unusual `y` values
+
+```{.python}
+diamonds.loc[(diamonds['y'] < 3) | (diamonds['y'] > 20)] 
+```
+<div style="font-size: 50%">
+```{python}
+diamonds.loc[(diamonds['y'] < 3) | (diamonds['y'] > 20)] 
+```
+</div>
+
+## `diamonds`: compare to 10 random diamonds
+```{.python}
+diamonds.sample(n=10)
+```
+
+<div style="font-size: 50%">
+```{python}
+diamonds.sample(n=10)
+```
+</div>
+
+## What to do with unusual values?
+
+1. Drop row
+2. Code value to `NA`
+3. Winsorize value
+
+
+
+
+## Option 1: drop rows
+```{.python}
+diamonds_clean = diamonds.loc[(diamonds['y'] >= 3) | (diamonds['y'] <= 20)] 
+diamonds_clean
+```
+
+<div style="font-size: 50%">
+```{python}
+diamonds_clean = diamonds.loc[(diamonds['y'] >= 3) | (diamonds['y'] <= 20)] 
+diamonds_clean
+```
+</div>
+
+## Option 2: recode to missing
+```{.python}
+diamonds_missing = diamonds.copy()
+diamonds_missing['y'] = np.where((diamonds_missing['y'] < 3) | (diamonds_missing['y'] > 20), np.nan, diamonds_missing['y'])
+diamonds_missing[diamonds_missing['y'].isna()]
+```
+
+<div style="font-size: 50%">
+```{python}
+diamonds_missing = diamonds.copy()
+diamonds_missing['y'] = np.where((diamonds_missing['y'] < 3) | (diamonds_missing['y'] > 20), np.nan, diamonds_missing['y'])
+diamonds_missing[diamonds_missing['y'].isna()]
+```
+</div>
+
+## Option 3: winsorize
+Winsorizing re-codes outliers to a numeric value, keeping them in the data. 
+
+To winsorize at 1 percent:
+
+* Replace anything less than the 1st percentile with the 1st percentile
+* Replace anything more than the 99th percentile with the 99th percentile
+
+```{.python}
+diamonds_winsor = diamonds.copy()
+pctile01 = diamonds_winsor['y'].quantile(0.01)
+pctile99 = diamonds_winsor['y'].quantile(0.99)
+
+print(f"1st Percentile: {pctile01}")
+print(f"99th Percentile: {pctile99}")
+```
+
+```{python}
+diamonds_winsor = diamonds.copy()
+pctile01 = diamonds_winsor['y'].quantile(0.01)
+pctile99 = diamonds_winsor['y'].quantile(0.99)
+
+print(f"1st Percentile: {pctile01}")
+print(f"99th Percentile: {pctile99}")
+```
+
+
+## Option 3: winsorize
+```{.python}
+diamonds_winsor['y_winsor'] = np.where(diamonds_winsor['y'] < pctile01, pctile01, 
+                                np.where(diamonds_winsor['y'] > pctile99, pctile99, diamonds_winsor['y']))
+diamonds_winsor
+```
+
+
+<div style="font-size: 50%">
+```{python}
+diamonds_winsor['y_winsor'] = np.where(diamonds_winsor['y'] < pctile01, pctile01, 
+                                np.where(diamonds_winsor['y'] > pctile99, pctile99, diamonds_winsor['y']))
+diamonds_winsor
+```
+
+</div>
+
+When is this useful? Income data, test scores, stock returns. Important when you are using procedures where the estimates are sensitive to outliers like computing a mean or running a regression
+
+## Pros + cons of each option 
+
+* **Winsorizing** 
+    * Manipulates the data values 
+    * Allows you to use that observation + that variable in your analysis
+* **Recoding to missing**
+    * Manipulates the data values 
+    * Allows you to use that observation -- just not _that variable_ -- in your analysis
+* **Dropping the observation** 
+    * Does not manipulate the data values
+    * But can't use that observation _at all_ in your analysis 
+
+## How do I know which to choose?
+* Make an educated guess by looking at the data as many ways as possible
+* You often can ask your data provider... but they will quickly grow impatient so try to answer as many questions as possible yourself
+
+## `diamonds`: what would you do?
+* What would you do where `x`, `y`, and `z` are all 0?
+* What would you do where `y > 20`? 
+
+## `diamonds`: what would we do?
+There is often not a "right" answer or you won't know the answer without talking to a data provider. 
+
+Our best guesses:
+
+* Rows where `x`, `y`, and `z` are all zero: set to `NA`
+* Rows where `y > 20`: winsorize? (hard to know for sure...)
+
+## Unusual continuous values: summary
+
+| Problem | Action |
+| ---- | --- | 
+| Erroneous row | drop row |
+| Erroneous cell | set to NA or winsorize | 
+
+**How do I decide which problem I have?** Examine unusual values in context of other columns (same row) and other rows (same columns). 
+
+**How do I decide whether to set to `NA` or winsorize?** Ideally, ask your data provider what's going on with these values. 
+
+<!-- 
+
+# Unusual values case study
+
+## Introducing the `mpg` dataset
+
+```{python}
+mpg
+```
+## Q: Why do some cars have better than typical mileage?
+
+```{python}
+potential_outliers = mpg.loc[(mpg["hwy"] > 40) | ((mpg["hwy"] > 20) & (mpg["displ"] > 5))]
+potential_outliers
+```
+
+Note: calling `geom_point()` more than once!
+
+## Q: Why do some cars have better than typical mileage?
+
+```{python}
+base = alt.Chart(mpg).mark_point().encode(
+         alt.X('displ:Q', title = "Engine size (displ)"),
+         alt.Y('hwy:Q', title = "Gas mileage")
+    ).properties(
+        width=600, 
+        height=400 )
+
+outliers = alt.Chart(potential_outliers).mark_point(
+    color='red',
+    size=100,
+    shape='circle'
+    ).encode(
+        x='displ:Q',
+        y='hwy:Q'
+    ).properties(
+        width=600, 
+        height=400)
+plot = base + outliers
+plot
+```
+
+
+## Q: Why do some cars have better than typical mileage?
+
+```{python}
+labels = alt.Chart(potential_outliers).mark_text(
+    align='left',
+    dx=10,  # Adjust horizontal distance of text from the point
+    dy=-5   # Adjust vertical distance of text from the point
+).encode(
+    alt.X('displ:Q', title = "Engine size (displ)"),
+    alt.Y('hwy:Q', title = "Gas mileage"),
+    text='model:N'  # Display car_model as the label
+).properties(
+    width=600, 
+    height=400)
+
+plot = base + outliers + labels
+plot
+```
+
+
+## Q: How are there big engines and good mileage? `color`
+```{python}
+alt.Chart(mpg).mark_point(size=100).encode(
+    x='displ:Q',  # Quantitative variable for displacement
+    y='hwy:Q',    # Quantitative variable for highway mpg
+    color='class:N',  # Categorical variable for class
+    tooltip=['displ', 'hwy', 'class']  # Optional: tooltip to display values on hover
+)
+```
+
+## gas mileage summary
+
+* Question: Why do some cars have better than typical mileage? *(What's going on with these outliers?)*
+    * Tools: 
+        * identify outliers 
+        * `color = class`  
+    * Answer: 2-seaters & subcompact 
+   -->
