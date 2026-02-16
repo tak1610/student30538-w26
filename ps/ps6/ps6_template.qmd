@@ -1,0 +1,242 @@
+---
+title: "CTA Service Cuts Problem Set 6"
+author: "Peter Ganong and Felix Farb"
+format:
+  pdf:
+    include-in-header:
+      text: |
+        % Enable wrapping for Pandoc code blocks in PDF
+        \usepackage{fvextra}
+        \usepackage{float}
+        \usepackage{makecell}
+        \usepackage{booktabs}
+        \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+editor: source
+execute-dir: project
+execute:
+    echo: true
+---
+
+Due Sat Feb 21 at 5:00PM Central
+
+"This submission is my work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: \*\*\_\_\*\*
+
+For an additional 5% bonus (in aggregate, not for each section), we ask you to please answer the following question for each section.
+\
+We would like to hear how you used AI (if at all) on this section. Where did you find it useful/not useful? We are asking for knowledge-sharing purposes; your answer will not impact your grade on the assignment.
+
+Before you begin this problem set, please rename `ps6_template.qmd` as `ps6.qmd`.
+Knit your completed solution `ps6.qmd` to make `ps6.pdf`. Push both `ps6.qmd` and `ps6.pdf` to your Github classroom repo.
+
+The data files for PS6 are available [here](https://uchicago.box.com/s/p5ra9o9mcojoqdtyyfupnwkl8x15nxfz).
+Download the data files to your repository to complete the problem set. Add the data folder to `.gitignore` so the large data files are not pushed to the repository.
+
+```{python}
+# setup
+import geopandas as gpd
+from os.path import join
+import altair as alt
+import pandas as pd
+import numpy as np
+import time
+
+import warnings
+warnings.filterwarnings('ignore')
+alt.renderers.enable("png")
+alt.data_transformers.disable_max_rows()
+
+data_path = 'data/external'
+
+# improve graph resolution
+import tempfile
+from IPython.display import SVG, display, Image
+import vl_convert as vlc
+
+def display_altair_png(chart, scale=2):
+    """
+    Render an Altair chart to a PNG and display it inline.
+
+    Parameters
+    ----------
+    chart : altair.Chart
+        Altair chart object to render.
+    scale : int, optional
+        Resolution scaling factor for the PNG (default = 2). Use scale=2 for standard slides. Use scale = 3–4 for dense figures or PDF exports.
+    """
+    png_bytes = vlc.vegalite_to_png(chart.to_dict(), scale=scale)
+
+    # Write to a temporary PNG file and display
+    with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
+        tmp.write(png_bytes)
+        tmp.flush()
+        display(Image(filename=tmp.name))
+```
+
+The following code cells contain your solutions from PS5 (Problems 1-3) that are needed for PS6 to run properly. Paste your PS5 code into these cells.
+
+```{python}
+# PS5 Problem 1a: calculate trip counts per route from GTFS data
+# Paste your calculate_trip_counts() function and call it here
+```
+
+```{python}
+# PS5 Problem 1b: read passengers, calculate utilization
+# Paste your read_passengers_df(), calculate_passenger_counts(),
+# calculate_utilization_rates() functions here, along with the
+# line_string_rename mapping and function calls
+```
+
+```{python}
+# PS5 Problem 3a: spatial join to get rider income
+# Paste your rider_income_calc() function here, call it,
+# and compute income_quintile
+```
+
+```{python}
+# PS5 Problem 3b: utilization rates by income quintile
+# Paste your calculate_passenger_counts_quintile() and
+# calculate_utilization_rates_quintile() functions here, and call them
+```
+
+## Problem 5
+
+### Part a. understand `cut_trips()`
+
+```{python}
+
+```
+
+### Part b. record equity impacts
+
+```{python}
+
+```
+
+### Part c. propose efficiency-focused cut
+
+```{python}
+#| eval: false
+#| echo: true
+
+def efficiency(updated_df):
+
+    cut_trips_df = compute_cut_impacts(updated_df)
+
+    return cut_trips_df
+```
+
+```{python}
+
+```
+
+### Part d. propose equity-focused cut
+
+```{python}
+#| eval: false
+#| echo: true
+
+def cut_trips_low_q1(utilization_quintile_df):
+
+    return updated_df
+
+updated_df_lowq1 = cut_trips_low_q1(utilization_quintile_df)
+
+def efficiency_low_q1(updated_df_lowq1):
+
+    cut_trips_df = compute_cut_impacts(updated_df_lowq1)
+
+    return cut_trips_df
+```
+
+```{python}
+
+```
+
+### Part e. propose balancing equity and efficiency
+
+```{python}
+#| eval: false
+#| echo: true
+
+def cut_trips_equity_minded(utilization_quintile_df):
+    return updated_df
+
+updated_df_equityminded = cut_trips_equity_minded(utilization_quintile_df)
+
+def efficiency_equity_minded(updated_df_equityminded):
+
+    cut_trips_df = compute_cut_impacts(updated_df_equityminded)
+
+    return cut_trips_df
+```
+
+```{python}
+
+```
+
+### Part f. summarize impacts of each approach
+
+#### Coding
+
+```{python}
+
+```
+
+#### Thinking
+
+
+## Problem 6 streamlit
+
+### **Part a.**
+
+```{python}
+#| eval: false
+#| echo: true
+
+def plot_utilization_vs_income(
+    df: pd.DataFrame,
+    title_name: str,
+    income_col: str = "median_income",
+    util_col: str = "utilization_rate",
+    filename: str = "utilization_plot.html",
+    color_by_change: bool = False,
+):
+
+    return chart
+```
+
+```{python}
+
+```
+
+### **Part b.**
+
+```{python}
+#| eval: false
+#| echo: true
+
+
+DASHBOARD_DIR = "data/dashboard"
+EXTERNAL_DIR = "data/external/dashboard"
+
+TRIPS_FILES = {
+    "Efficiency": f"{DASHBOARD_DIR}/cut_trips_detail.csv",
+    "Equity-minded": f"{DASHBOARD_DIR}/cut_trips_detail_equityminded.csv",
+    "Rawlsian": f"{DASHBOARD_DIR}/cut_trips_detail_lowq1.csv",
+}
+
+FIG_FILES = {
+    "Efficiency": f"{DASHBOARD_DIR}/trips_post_cut_efficiency.csv",
+    "Equity-minded": f"{DASHBOARD_DIR}/trips_post_cut_equityminded.csv",
+    "Rawlsian": f"{DASHBOARD_DIR}/trips_post_cut_lowq1.csv",
+}
+
+RAIL_GEOJSON = f"{EXTERNAL_DIR}/CTA_-_'L'_(Rail)_Lines_20250924.geojson"
+BUS_GEOJSON = f"{EXTERNAL_DIR}/CTA_-_Bus_Routes_20250924.geojson"
+
+
+```
+
+```{python}
+
+```
