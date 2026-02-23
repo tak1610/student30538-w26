@@ -516,78 +516,122 @@ Saw four dashboards
 ## Roadmap
 * Why dashboards are different than `.py` (or notebooks or `qmd`)
 * Bare vs streamlit mode
-* toy example of what streamlit mode can do
-* What is a session?
+* Two ways to 'save' across re-runs of your dashboard
+    * Session state
+    * Caching
 
 
-## Why dashboards are different than `.py` {style="font-size: 0.8em"}
+## Why dashboards are different than `.py` 
 
-The first section of this lecture treated dashboards as websites without user input. This is like a normal Python script. Run once and gives you output.
+* The first section of this lecture treated dashboards as websites without user input. This is like a normal Python script. Run once and gives you output.
 
-The second section made dashboards interactive. To do this, it must be the case that the entire dashboard, or some part of it, may be run more than once.
+* The second section made dashboards interactive. To do this, it must be the case that the entire dashboard, or some part of it, may be run more than once.
 
+<!-- 
 - In Terminal/command line: `$ pip install watchdog`
 
-`watchdog` is the file-watching library Streamlit leans on to detect code/data changes (like when we got the option to "re-run" with dashboard 2)
+`watchdog` is the file-watching library Streamlit leans on to detect code/data changes (like when we got the option to "re-run" with dashboard 2) 
+-->
 
 ## Bare mode vs streamlit mode {style="font-size: 0.8em"}
 
 * "Bare mode" (`$ python app.py`) runs your script like standard Python; output is just whatever the script prints. 
-* "Streamlit mode" (`$ python -m streamlit run app.py` or for short `$ streamlit run app.py`) does four things:
+* "Streamlit mode" (`$ streamlit run app.py`) does four things:
     * sets up a server to run your script
-    * records the state (e.g. the choice in `st.selectbox`)
-    * reruns code on state changes (e.g. new choice in in `st.selectbox`)
+    * records the **state** (e.g. the choice in `st.selectbox`)
+    * reruns code when it detects state changes (e.g. new choice in in `st.selectbox`)
     * serves the interactive user interface (UI) found in the browser
-* There's a lot of extra code under the hood, streamlit's goal is for you to focus on the Python code (and ignore all the running a server, taking user input, designing a nice webpage)
+* There's a lot of extra code under the hood. streamlit's goal is for you to focus on the Python code (and ignore all the running a server, taking user input, designing a nice webpage)
+
+## Session states and caching: motivation
+* One problem with streamlit mode: every time state changes, it will re-run your script from the top
+* Say your dashboard has 2 selection box options:
+    * User selects A: calculate A and plot it
+    * User selects B: calculate B and plot it
+* Every time the user switches between the selection to plot A and B, `streamlit` will re-run the calculations for A and B
+
+## Saving across re-runs {style="font-size: 0.8em"}
+* To make this more efficient, we can have `streamlit` do something once and 'save' it for re-runs
+* Streamlit offers two alternate ways to do this:
+    * Session states
+    * Caching
+* Session state is conceptually easier to understand -- will explain this first to build intuition
+* But caching is more commonly used but less transparent -- will explain this in next section
+* *Note: there are also subtle difference in uses between session states and caching that we won't cover in depth in this class.*
+
+## Session state {style="font-size: 0.8em"}
+
+* A **session** is a single instance of viewing an app
+* Session State provides a dictionary-like interface where you can preserve info between script reruns within a session. 
+* Use `st.session_state` with dictionary notation to store and recall values. For example, `st.session_state.my_key`. 
+    * If a user refreshes their browser page or reloads the URL to the app, their Session State resets and they begin again with a new session.
+    * Multiple users = multiple sessions 
 
 
-## Simple re-run demo overview {style="font-size: 0.8em"}
+
+
+## Session state demo overview {style="font-size: 0.8em"}
 
 [http://uchicago-harris-dap-dashboards-5.streamlit.app/](http://uchicago-harris-dap-dashboards-5.streamlit.app/)
 
 * `$ streamlit run 5/session_state_example.py`
 * User chooses `route = st.selectbox("CTA Route", ...)` and `cut_pct = st.slider("What fraction of service to cut?", ...)`
-* Computer then runs a computation which takes 3 seconds (on the pset, you will see an example where it takes much longer than 3 seconds)
+* Dashboard then runs a computation which takes 3 seconds (on the pset, you will see an example where it takes much longer than 3 seconds)
 * Returns a result
 * What if we want to run the exact same computation twice? Better to use the saved result!
 
-## Simple re-run demo review code
-* Users selects line to cut and percentage cut -- lines 11 and 12
-* Record number of calculations done and key for calculations done -- lines 14-18
-* If calculation has not been run before, run it -- lines 21-25
+## Session state demo review code {style="font-size: 0.8em"}
+* Lines 9-10: users selects line to cut and percentage cut 
+* Lines 12-16: record number of calculations done and define key for calculations
+* Lines 19-23: If calculation has not been run before, run it and save in `st.session_state`. Add to counter.
 
 {{< include snippet/session_state_example.qmd >}}
 
-## What is a session? {style="font-size: 0.8em"}
 
-* A session is a single instance of viewing an app. 
-* Multiple users = multiple sessions. 
-* If the user refreshes their browser page or reloads the URL to the app, their Session State resets and they begin again with a new session.
-* Session State provides a dictionary-like interface where you can preserve info between script reruns. Use `st.session_state` with key or attribute notation to store and recall values. For example, `st.session_state.my_key`. 
+## Summary
 
-## summary
-
-* dashboards expect to be run more than once
-* bare mode lets you test running just once
-* when you run slow code, save the output
-* each browser tab is a session
+* Dashboards expect to be run more than once
+<!-- * bare mode lets you test running just once -->
+* When you run slow code, want to run it once within a session and save the output
+* `st.session_state` is one way to do this
 
 
-# decorators and `@cache_data`
+# Decorators and `@st.cache_data`
 
-## roadmap
+## Roadmap
 
-* decorator examples
-    * timer 
-    * crs for spatial joins
-    * `@cache_data`
+* Decorator examples
+    * Non-`streamlit`: timer 
+    * Non-`streamlit`: check crs for spatial joins
+    * `@st.cache_data`
 * revisit toy example from last section
 * real-life example
 
+## Decorators {style="font-size: 0.8em"}
+* A second way to save values across states is to use a `@st.cache_data` **decorator**
+* Before we describe `@st.cache_data`, we'll cover decorators in general
+* A decorator is a wrapper that takes another function as input and returns a modified version of that function
+* Decorators let you add behavior without changing the original function's code
+    * *When would you want to do this?* If you want to apply same cross-cutting behavior across multiple functions without duplicating code 
 
-## Timing pandas data processing
+Syntax: 
+```{python}
+#| echo : true
+#| eval: false
+@decorator_name
+def myfunction():
+```
+
+is equivalent to `myfunction = decorator_name(myfunction)`
+
+## Decorator example 1: timing pandas data processing {style="font-size: 0.8em"}
+
+* Lines 3-11: define `@timer` decorator: times function and prints time
+* Lines 13-15: apply `@timer` to `summarize(df)`
 
 ```{python}
+#| eval: false
+#| echo: true
 import pandas as pd, time
 
 def timer(func):
@@ -609,7 +653,34 @@ summary = summarize(df)
 summary
 ```
 
-## Ensure CRS for GeoPandas joins
+## Decorator example 1: timing pandas data processing
+```{python}
+#| eval: true
+#| echo: false
+import pandas as pd, time
+
+def timer(func):
+    """Decorator that prints runtime."""
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+        print(f"{func.__name__} took {end - start:.3f} s")
+        return result
+    return wrapper
+
+@timer
+def summarize(df):
+    return df.groupby("city")["value"].mean()
+
+df = pd.DataFrame({"city": ["SF","NYC","LA","Chicago"]*3, "value": range(12)})
+summary = summarize(df)
+summary
+```
+
+## Decorator example 2: ensure CRS for GeoPandas joins  {style="font-size: 0.8em"}
+
+* Line 5: need to define extra `decorator()` layer to capture the decorator's argument ("EPSG:4326")
 
 ```{python}
 #| eval: false
@@ -632,8 +703,14 @@ def spatial_join(gdf1, gdf2):
     return gpd.sjoin(gdf1, gdf2, how="inner")
 ```
 
+## `@st.cache_data` decorator {style="font-size: 0.8em"}
+* `@st.cache_data` is another (albeit much more complicated) decorator included in `streamlit`
+* `@st.cache_data` saves the result of the function the *first time* it runs
+    * If first time run: `@st.cache_data` runs the function and saves result to memory
+    * If run before: `@st.cache_data` returns the previously saved result instead of re-running
+* `@st.cache_data` trades off memory for speed
 
-## Automate toy example via cache-ing
+## How cacheing works {style="font-size: 0.8em"}
 ```{python}
 #| eval: false
 @st.cache_data
@@ -641,18 +718,15 @@ def long_running_function(param1, param2):
     return …
 ```
 
-1. When user first calls `long_running_function(p1, p2)` for the first time, `@st.cache_data` makes a note of `p1, p2`. It stores the return value in a cache.
+1. When user first calls `long_running_function(p1, p2)` for the first time, `@st.cache_data` makes a note of `p1, p2`. It stores the return value in cache
 2. If the next call is `long_running_function(q1, q2)`, it also stores this in the cache.
-3. (time-saving) If the next call is `long_running_function(p1, p2)`, instead of running any code, it just returns the saved value from the cache.
+3. *(time-saving)* If the next call is `long_running_function(p1, p2)`, instead of running the code inside `long_running_function()`, it just returns the saved value from step 1
 
 
-## do-pair-share {background-color="aliceblue"}
 
-1. Run `$ python app_dps_2.py`
-2. Edit the script to include a decorator that saves output from prior runs of `compute_passengers()`
-3. Record the change in speed
+## Automate toy example via caching
 
-## cache data in streamlit
+`6/session_state_cache.qmd`:
 
 {{< include snippet/session_state_cache.qmd >}}
 
@@ -667,18 +741,29 @@ We have decorated `@st.cache_data` for four different functions
 3. `mpoint()`
 4. `histdata()`
 
+## Revisit a real example: `4/uber_pickups.py`
+{{< include snippet/uber_pickups.qmd >}}
 
-## Summary: What all decorators have in common {style="font-size: 0.8em"}
+## do-pair-share {background-color="aliceblue"}
 
-* All wrap a function with extra behavior. 
-* They take a function as input and return a modified version.
-* Create them when you know you will use an **already-written** function more than once
-* Syntax: `@decorator` above a function definition.
+1. Run `$ streamlit run app_dps_2.py`
+2. Edit the script to use `@st.cache_data` decorator on `compute_passengers()`
+3. Record the change in speed
+
+
+
+## Summary: decorators and `@st.cache_data` {style="font-size: 0.7em"}
+
+* Decorators
+    * Wrap a function with extra behavior and return a modified version of function
+    * Create them when you want to extend many functions in the same way
+    * Syntax: `@decorator` above a function definition.
+    * Decorators are not a dashboard-only tool! We can write our own decorators, or use ones that come with a package (`st.cache_data` is the latter).
 * Examples
     * Timing and logging (`@timer`)
 	* Validation or transformation (`@ensure_crs(crs)`)
 	* Caching (`@st.cache_data`)
-* Remark: Decorators are not a dashboard-only tool! We can write our own decorators, or use ones that come with a package (st.cache_data is the latter).
+* `@st.cache_data` is a decorator that can be used similarly to `st.session_state`
 
 # Streamlit and other types of dashboards {style="font-size: 0.8em"}
 
@@ -698,11 +783,14 @@ We have decorated `@st.cache_data` for four different functions
 * Chat box / LLM wrapper
 * Draw on external data (user uploaded, from a live database, etc.)
 
-## How should you use streamlit for the final project (and in life)? 
+## How should you use `streamlit` for the final project (and in life)?  {style="font-size: 0.7em"}
 * Build a dashboard when a static figure or table will not suffice
 * This occurs when there is too much information to fit on a single figure or table (e.g. one dashboard is better than ten figures)
 * The goal, however, is not to proliferate information (e.g. "how can I imagine ten figures so that then I can shoehorn them into dashboard?"). 
 * Instead, it is to develop a set of information that a reader or decision-maker would want to interact with.
+* This interactivity should be *meaningful*: should approximate the "exploration mode" loop we outlined last lecture.
+    * Example: user selection changes input data for a plot or parameters to a calculation 
+    * Counterexample: your dashboard allows user to switch between 2 pre-made static plots
 
 ## Streamlit and other dashboarding tools {style="font-size: 0.8em"}
 
@@ -712,10 +800,10 @@ What software might you see elsewhere? Microsoft Power BI, tableau, Qlik, Looker
 
 What dashboard should you use? This is not an important choice. Use whatever your organization or collaborators are already using. Or prototype in streamlit and then port.
 
-What if a job you apply for requires a specific dashboarding software? Spend a few hours teaching it to yourself and then put it on your resume (do **not** just put it on your resume). Or put dashbaords in general and learn the skill for the interview.
+What if a job you apply for requires a specific dashboarding software? Spend a few hours teaching it to yourself and then put it on your resume (do **not** just put it on your resume). Or put dashboards in general and learn the skill for the interview.
 
 ## The most famous dashboard ever  {style="font-size: 0.8em"}
-New York City Police Department's "CompStat" in the 1990's. Why is it such a perfect application of a dashboard? (Source: *Classic book: Bob Behn's [The PerformanceStat Potential](https://www.brookings.edu/books/the-performancestat-potential/)*)
+New York City Police Department's "CompStat" in the 1990's ([link](https://compstat.nypdonline.org/)). Why is it such a perfect application of a dashboard? (Source: *Classic book: Bob Behn's [The PerformanceStat Potential](https://www.brookings.edu/books/the-performancestat-potential/)*)
 
 <!-- note to self: I skipped 4 and 7 since I didn't think they make a lot of sense-->
 1. Metrics (arrests, crime rate) are clearly aligned with institutional goals
@@ -732,7 +820,7 @@ Very few other parts of government can meet all seven of these criteria
 
 Even under these perfect conditions, the dashboard was not very successful. In a survey of 1800 retired NYC police officers of the question “are you confident that major crimes have declined by 80% in New York since 1990s?” more than half said no (Eterno, Verma, and Silverman 2014). Respondents also talked about pressure to change reports to make crime look better.
 
-The key idea is that "what gets measured gets managed". Once a manger focuses on a metric, that metric becomes less useful or informative than it was before.
+The key idea is that "what gets measured gets managed". Once a manager focuses on a metric, that metric becomes less useful or informative than it was before.
 
 
 ## Conclusion of section

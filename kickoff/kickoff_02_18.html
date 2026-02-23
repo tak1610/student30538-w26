@@ -1154,6 +1154,28 @@ Peter Ganong and Maggie Shi
 </div>
 
 </section>
+<section id="lab-assessment-6-debrief-q1" class="slide level2">
+<h2>Lab assessment 6 debrief: Q1</h2>
+<p>Question 1: pseudocode to produce <code>pssengers_inc_df</code></p>
+<ul>
+<li>Didn’t understand intended data structure: the dataframe combines pssenger trips with predicted passenger incomes, which is based on a spatial join between trip origin points and census tract</li>
+<li>Didn’t keep unique lat/lon points to speed up spatial join</li>
+<li>Pseudocode issues didn’t follow logical order of operations (e.g. CRS alignment after spatial join). Pseudocode isn’t just plain English; should have the structure of code</li>
+</ul>
+</section>
+<section id="lab-assessment-6-debrief-q2-and-q3" class="slide level2">
+<h2>Lab assessment 6 debrief: Q2 and Q3</h2>
+<ul>
+<li>Question 2: negative income
+<ul>
+<li>Basic completion check for the problem set – should have been straightforward</li>
+</ul></li>
+<li>Question 3: modify to compute city-level income quintiles
+<ul>
+<li>Need to construct quintiles on city census tracts <em>before</em> spatial join, otherwise will lose unmerged census tracts</li>
+</ul></li>
+</ul>
+</section>
 <section id="streamlit-beyond-dashboards" class="slide level2" style="font-size: 0.7em">
 <h2>Streamlit beyond dashboards</h2>
 <p>Ankit Dixit:</p>
