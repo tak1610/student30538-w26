@@ -1,0 +1,23 @@
+---
+title: "Kickoff - lecture 15"
+author: "Peter Ganong and Maggie Shi"
+date-format: February 23/24, 2026
+format: 
+    revealjs:
+        slide-number: true
+        show-slide-number: all
+        self-contained: true
+---
+
+## Schedule this week
+* Guest lecture 11AM-12PM Thursday in Sky Suite
+    * Mon/Wed sections: RSVPs close at noon (link in Canvas)
+    * Tue/Thu sections: attendance required
+* Final exam
+    * **Arrive 6:15PM** for attendance (taken before exam)
+    * Like a quiz. Lockdown browser, bring id.
+    * Exam starts at 6:30PM. No late start permitted.
+
+## Notes for Mon/Tue
+* Stay until end for attendance (no do-pair-share)
+* Tue 2-3:20:  open office hours to talk about your project. Strongly encouraged to show what you have so far. Sign up [here](https://docs.google.com/spreadsheets/d/1LdJo1yJfd1Kq01neww5iWvlgrG_r8CDpaBISagN0C-U/edit?gid=1292836342#gid=1292836342). 
